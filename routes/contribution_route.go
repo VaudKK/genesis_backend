@@ -1,8 +1,25 @@
 package routes
 
-import "github.com/gin-gonic/gin"
+import (
+	"genesis/controllers"
+	"github.com/gin-gonic/gin"
+)
 
-func ContributionRoute(router *gin.Engine){
+type ContributionRoute interface {
+	Routes(*gin.Engine)
+}
+
+type route struct {
+	controller controllers.ContributionController
+}
+
+func NewContributionRoutes(controller controllers.ContributionController) ContributionRoute {
+	return &route{
+		controller: controller,
+	}
+}
+
+func (r *route) Routes(router *gin.Engine) {
 	//all routes related to contributions
-	
+	router.POST("/contribution", r.controller.AddContribution())
 }
