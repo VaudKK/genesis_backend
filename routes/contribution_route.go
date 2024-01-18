@@ -2,6 +2,7 @@ package routes
 
 import (
 	"genesis/controllers"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,4 +23,5 @@ func NewContributionRoutes(controller controllers.ContributionController) Contri
 func (r *route) Routes(router *gin.Engine) {
 	//all routes related to contributions
 	router.POST("/contribution", r.controller.AddContribution())
+	router.GET("/contribution/:id", r.controller.GetContributionById())
 }

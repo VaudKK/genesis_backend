@@ -3,14 +3,17 @@ package service
 import (
 	"context"
 	"genesis/models"
+	"log"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type ContributionService interface {
 	AddContribution(*models.Contribution) (interface{}, error)
-	//GetContributionsByGroup(int) []models.Contribution
+	GetContributionsById(string) (*models.Contribution, error)
 }
 
 type contributionService struct {
@@ -35,6 +38,30 @@ func (service *contributionService) AddContribution(cntr *models.Contribution) (
 	return result, nil
 }
 
-// func (service *contributionService) GetContributionsByGroup(groupId int) []models.Contribution {
+func (service *contributionService) GetContributionsById(contributionId string) (*models.Contribution, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-// }
+	var result models.Contribution
+
+	id, err := primitive.ObjectIDFromHex(contributionId)
+
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+
+	filter := bson.D{{Key: "_id", Value: id}}
+	err = service.collection.FindOne(ctx, filter).Decode(&result)
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+
+		log.Fatal(err)
+		return nil, err
+	}
+
+	return &result, nil
+}
