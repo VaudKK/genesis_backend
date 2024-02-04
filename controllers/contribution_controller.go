@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"genesis/models"
 	"genesis/responses"
 	"genesis/service"
@@ -109,8 +108,6 @@ func (controller contributionController) AddManyContributions() gin.HandlerFunc 
 		}
 
 		newContributions := buildContributions(contributions)
-
-		fmt.Println(newContributions...)
 
 		result, addErr := controller.service.AddManyContributions(newContributions)
 
