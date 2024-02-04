@@ -18,9 +18,6 @@ var (
 func main() {
 	router := gin.Default()
 
-	//database
-	configs.ConnectToDB()
-
 	//routes
 	contributionRoutes.Routes(router)
 

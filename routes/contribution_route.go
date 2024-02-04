@@ -2,6 +2,7 @@ package routes
 
 import (
 	"genesis/controllers"
+	"genesis/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,6 +23,12 @@ func NewContributionRoutes(controller controllers.ContributionController) Contri
 
 func (r *route) Routes(router *gin.Engine) {
 	//all routes related to contributions
-	router.POST("/contribution", r.controller.AddContribution())
-	router.GET("/contribution/:id", r.controller.GetContributionById())
+	protectedRoutes := router.Group("/contributions")
+
+	protectedRoutes.Use(middleware.AuthenticationMiddleware())
+
+	protectedRoutes.POST("/add", r.controller.AddContribution())
+	protectedRoutes.POST("/add-many", r.controller.AddManyContributions())
+	protectedRoutes.GET("/:id", r.controller.GetContributionById())
+
 }

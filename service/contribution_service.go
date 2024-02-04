@@ -13,6 +13,7 @@ import (
 
 type ContributionService interface {
 	AddContribution(*models.Contribution) (interface{}, error)
+	AddManyContributions([]interface{}) (interface{}, error)
 	GetContributionsById(string) (*models.Contribution, error)
 }
 
@@ -36,6 +37,19 @@ func (service *contributionService) AddContribution(cntr *models.Contribution) (
 	}
 
 	return result, nil
+}
+
+func (service *contributionService) AddManyContributions(contributions []interface{}) (interface{}, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	result, err := service.collection.InsertMany(ctx, contributions)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result.InsertedIDs, nil
 }
 
 func (service *contributionService) GetContributionsById(contributionId string) (*models.Contribution, error) {

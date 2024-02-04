@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"genesis/models"
 	"genesis/responses"
 	"genesis/service"
@@ -15,6 +16,7 @@ var validate = validator.New()
 
 type ContributionController interface {
 	AddContribution() gin.HandlerFunc
+	AddManyContributions() gin.HandlerFunc
 	GetContributionById() gin.HandlerFunc
 }
 
@@ -38,6 +40,7 @@ func (controller contributionController) AddContribution() gin.HandlerFunc {
 				Message: "error",
 				Data:    err.Error(),
 			})
+			c.Abort()
 			return
 		}
 
@@ -48,6 +51,7 @@ func (controller contributionController) AddContribution() gin.HandlerFunc {
 				Message: "error",
 				Data:    validatorErr.Error(),
 			})
+			c.Abort()
 			return
 		}
 
@@ -67,6 +71,7 @@ func (controller contributionController) AddContribution() gin.HandlerFunc {
 				Message: "error",
 				Data:    addErr.Error(),
 			})
+			c.Abort()
 			return
 		}
 
@@ -76,6 +81,70 @@ func (controller contributionController) AddContribution() gin.HandlerFunc {
 			Data:    result,
 		})
 	}
+}
+
+func (controller contributionController) AddManyContributions() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var contributions models.ContributionList
+
+		if err := c.BindJSON(&contributions); err != nil {
+			c.JSON(http.StatusBadRequest, responses.ContributionResponse{
+				Status:  http.StatusBadRequest,
+				Message: "error",
+				Data:    err.Error(),
+			})
+			c.Abort()
+			return
+		}
+
+		//check required fields
+		if validatorErr := validate.Struct(&contributions); validatorErr != nil {
+			c.JSON(http.StatusBadRequest, responses.ContributionResponse{
+				Status:  http.StatusBadRequest,
+				Message: "error",
+				Data:    validatorErr.Error(),
+			})
+			c.Abort()
+			return
+		}
+
+		newContributions := buildContributions(contributions)
+
+		fmt.Println(newContributions...)
+
+		result, addErr := controller.service.AddManyContributions(newContributions)
+
+		if addErr != nil {
+			c.JSON(http.StatusBadRequest, responses.ContributionResponse{
+				Status:  http.StatusBadRequest,
+				Message: "error",
+				Data:    addErr.Error(),
+			})
+			c.Abort()
+			return
+		}
+
+		c.JSON(http.StatusCreated, responses.ContributionResponse{
+			Status:  http.StatusCreated,
+			Message: "Contributions Added",
+			Data:    result,
+		})
+	}
+}
+
+func buildContributions(contributions models.ContributionList) []interface{} {
+	newContributions := make([]interface{}, 0)
+	for _, contribution := range contributions.Contributions {
+		newContributions = append(newContributions, models.Contribution{
+			Id:          primitive.NewObjectID(),
+			Name:        contribution.Name,
+			Amount:      contribution.Amount,
+			Date:        contribution.Date,
+			PaymentMode: contribution.PaymentMode,
+		})
+	}
+
+	return newContributions
 }
 
 func (controller contributionController) GetContributionById() gin.HandlerFunc {

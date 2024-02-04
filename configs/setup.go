@@ -11,10 +11,12 @@ import (
 )
 
 func ConnectToDB() *mongo.Client {
+	LoadConfig()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(EnvMongoURI()))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(AppConfig.MONGOURI))
 
 	if err != nil {
 		log.Fatal(err)

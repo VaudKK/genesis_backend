@@ -7,12 +7,18 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func EnvMongoURI() string {
+var AppConfig struct {
+	MONGOURI string
+	JWT_KEY  string
+}
+
+func LoadConfig() {
 	err := godotenv.Load()
 
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	return os.Getenv("MONGOURI")
+	AppConfig.MONGOURI = os.Getenv("MONGOURI")
+	AppConfig.JWT_KEY = os.Getenv("JWT_KEY")
 }
