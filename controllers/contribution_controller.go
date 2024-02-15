@@ -57,6 +57,7 @@ func (controller contributionController) AddContribution() gin.HandlerFunc {
 		newContribution := models.Contribution{
 			Id:          primitive.NewObjectID(),
 			Name:        Contribution.Name,
+			Phone:		 Contribution.Phone,
 			Amount:      Contribution.Amount,
 			Date:        Contribution.Date,
 			PaymentMode: Contribution.PaymentMode,
@@ -135,6 +136,7 @@ func buildContributions(contributions models.ContributionList) []interface{} {
 		newContributions = append(newContributions, models.Contribution{
 			Id:          primitive.NewObjectID(),
 			Name:        contribution.Name,
+			Phone:		 contribution.Phone,
 			Amount:      contribution.Amount,
 			Date:        contribution.Date,
 			PaymentMode: contribution.PaymentMode,

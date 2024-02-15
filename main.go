@@ -5,12 +5,13 @@ import (
 	"genesis/controllers"
 	"genesis/routes"
 	"genesis/service"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
 
 var (
-	contributionSerivce    service.ContributionService        = service.NewContributionService(configs.GetCollection(configs.DB, "contributions"))
+	contributionSerivce    service.ContributionService        = service.NewContributionService(configs.GetCollection(configs.DB, os.Getenv("CONTR_STAGING")))
 	contributionController controllers.ContributionController = controllers.NewContributionController(contributionSerivce)
 	contributionRoutes     routes.ContributionRoute           = routes.NewContributionRoutes(contributionController)
 )
@@ -21,5 +22,5 @@ func main() {
 	//routes
 	contributionRoutes.Routes(router)
 
-	router.Run("localhost:8080")
+	router.Run()
 }

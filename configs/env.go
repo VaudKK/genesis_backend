@@ -1,10 +1,7 @@
 package configs
 
 import (
-	"log"
 	"os"
-
-	"github.com/joho/godotenv"
 )
 
 var AppConfig struct {
@@ -13,12 +10,6 @@ var AppConfig struct {
 }
 
 func LoadConfig() {
-	err := godotenv.Load()
-
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
 	AppConfig.MONGOURI = os.Getenv("MONGOURI")
 	AppConfig.JWT_KEY = os.Getenv("JWT_KEY")
 }
