@@ -5,6 +5,7 @@ import (
 	"genesis/responses"
 	"genesis/service"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -17,6 +18,7 @@ type ContributionController interface {
 	AddContribution() gin.HandlerFunc
 	AddManyContributions() gin.HandlerFunc
 	GetContributionById() gin.HandlerFunc
+	GetContributionsByOrganization() gin.HandlerFunc
 }
 
 type contributionController struct {
@@ -55,12 +57,14 @@ func (controller contributionController) AddContribution() gin.HandlerFunc {
 		}
 
 		newContribution := models.Contribution{
-			Id:          primitive.NewObjectID(),
-			Name:        Contribution.Name,
-			Phone:		 Contribution.Phone,
-			Amount:      Contribution.Amount,
-			Date:        Contribution.Date,
-			PaymentMode: Contribution.PaymentMode,
+			Id:             primitive.NewObjectID(),
+			Name:           Contribution.Name,
+			Phone:          Contribution.Phone,
+			Amount:         Contribution.Amount,
+			Date:           Contribution.Date,
+			GroupId:        "Genesis",
+			OrganizationId: c.GetString("organizationId"),
+			PaymentMode:    Contribution.PaymentMode,
 		}
 
 		result, addErr := controller.service.AddContribution(&newContribution)
@@ -108,7 +112,7 @@ func (controller contributionController) AddManyContributions() gin.HandlerFunc 
 			return
 		}
 
-		newContributions := buildContributions(contributions)
+		newContributions := buildContributions(contributions, c)
 
 		result, addErr := controller.service.AddManyContributions(newContributions)
 
@@ -130,16 +134,18 @@ func (controller contributionController) AddManyContributions() gin.HandlerFunc 
 	}
 }
 
-func buildContributions(contributions models.ContributionList) []interface{} {
+func buildContributions(contributions models.ContributionList, ctx *gin.Context) []interface{} {
 	newContributions := make([]interface{}, 0)
 	for _, contribution := range contributions.Contributions {
 		newContributions = append(newContributions, models.Contribution{
-			Id:          primitive.NewObjectID(),
-			Name:        contribution.Name,
-			Phone:		 contribution.Phone,
-			Amount:      contribution.Amount,
-			Date:        contribution.Date,
-			PaymentMode: contribution.PaymentMode,
+			Id:             primitive.NewObjectID(),
+			Name:           contribution.Name,
+			Phone:          contribution.Phone,
+			GroupId:        "Genesis",
+			OrganizationId: ctx.GetString("organizationId"),
+			Amount:         contribution.Amount,
+			Date:           contribution.Date,
+			PaymentMode:    contribution.PaymentMode,
 		})
 	}
 
@@ -177,4 +183,59 @@ func (controller contributionController) GetContributionById() gin.HandlerFunc {
 			Data:    result,
 		})
 	}
+}
+
+func (controller contributionController) GetContributionsByOrganization() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		organizationId := ctx.GetString("organizationId")
+
+		page, size := getPaginationData(ctx)
+
+		data, err := controller.service.GetContributionsByOrganizationId(organizationId, page, size)
+
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, responses.ContributionResponse{
+				Status:  http.StatusInternalServerError,
+				Message: "Error while fetching contributions",
+				Data:    err,
+			})
+
+			ctx.Abort()
+			return
+		}
+
+		ctx.JSON(http.StatusOK, responses.ContributionResponse{
+			Status:  http.StatusOK,
+			Message: "Success",
+			Data:    data,
+		})
+	}
+}
+
+func getPaginationData(ctx *gin.Context) (int, int) {
+	pageStr := ctx.Query("page")
+	sizeStr := ctx.Query("size")
+
+	if pageStr == "" {
+		return 0, 10
+	}
+
+	page, err := strconv.Atoi(pageStr)
+
+	if err != nil {
+		return 0, 10
+	}
+
+	if sizeStr == "" {
+		return page, 10
+	}
+
+	size, err := strconv.Atoi(sizeStr)
+
+	if err != nil {
+		return page, 10
+	}
+
+	return page, size
+
 }

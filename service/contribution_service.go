@@ -9,12 +9,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type ContributionService interface {
 	AddContribution(*models.Contribution) (interface{}, error)
 	AddManyContributions([]interface{}) (interface{}, error)
 	GetContributionsById(string) (*models.Contribution, error)
+	GetContributionsByOrganizationId(string, int, int) ([]models.Contribution, error)
 }
 
 type contributionService struct {
@@ -78,4 +80,36 @@ func (service *contributionService) GetContributionsById(contributionId string) 
 	}
 
 	return &result, nil
+}
+
+func (service *contributionService) GetContributionsByOrganizationId(organizationId string, page int, size int) ([]models.Contribution, error) {
+	filter := bson.D{{Key: "organizationId", Value: organizationId}}
+	opt := options.Find().SetSort(bson.D{{Key: "date", Value: -1}})
+
+	skip := int64(page * size)
+	limit := int64(size)
+	pagination := options.FindOptions{Limit: &limit, Skip: &skip}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	cursor, err := service.collection.Find(ctx, filter, &pagination, opt)
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return []models.Contribution{}, nil
+		}
+
+		return nil, err
+	}
+
+	result := make([]models.Contribution,0)
+
+	err = cursor.All(ctx, &result)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }

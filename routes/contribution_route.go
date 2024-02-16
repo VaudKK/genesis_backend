@@ -29,6 +29,7 @@ func (r *route) Routes(router *gin.Engine) {
 
 	protectedRoutes.POST("/add", r.controller.AddContribution())
 	protectedRoutes.POST("/add-many", r.controller.AddManyContributions())
+	protectedRoutes.GET("", r.controller.GetContributionsByOrganization())
 	protectedRoutes.GET("/:id", r.controller.GetContributionById())
 
 }

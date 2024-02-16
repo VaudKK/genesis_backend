@@ -59,7 +59,7 @@ func AuthenticationMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		ctx.Set("organizationId", claims.Subject)
+		ctx.Set("organizationId", claims.OrganizationId)
 		ctx.Next()
 	}
 }
